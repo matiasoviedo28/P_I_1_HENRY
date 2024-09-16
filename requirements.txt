@@ -1,0 +1,9 @@
+fastapi==0.114.1
+uvicorn==0.30.6
+pandas==2.1.4
+matplotlib==3.8.2
+seaborn==0.13.2
+wordcloud==1.9.3
+nltk==3.9.1
+pyarrow==17.0.0
+fastparquet==2024.5.0
