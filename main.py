@@ -1,3 +1,4 @@
+#importar librerias
 from fastapi import FastAPI
 from pydantic import BaseModel
 import pandas as pd
@@ -6,6 +7,7 @@ from typing import List, Optional
 
 app = FastAPI()
 
+#modelos para estructurar las respuestas de las rutas
 class MovieDetail(BaseModel):
     titulo: str
     fecha_lanzamiento: Optional[str]
@@ -37,7 +39,7 @@ class MovieByGenreResponse(BaseModel):
     genero: str
     peliculas: List[str]
 
-# Cargar datos
+#cargar datos, filtrados y limpios (limpieza.py)
 try:
     movies_metadata = pd.read_parquet("datasets/movies_dataset.parquet")
     credits = pd.read_parquet("datasets/credits.parquet")
@@ -45,7 +47,7 @@ try:
 except (FileNotFoundError, pd.errors.EmptyDataError, pd.errors.ParserError) as e:
     raise RuntimeError(f"Error al cargar los archivos CSV: {e}")
 
-# Procesar datos
+#procesar datos
 def extract_genres(genre_field):
     try:
         genres = ast.literal_eval(genre_field)
@@ -55,12 +57,8 @@ def extract_genres(genre_field):
 
 movies_metadata['genres_list'] = movies_metadata['genres'].apply(extract_genres)
 
-@app.get("/")
-def read_root():
-    return {"message": "API de recomendaciones de películas está funcionando"}
-
-
-@app.get("/similares/{titulo}", response_model=RecommendationResponse) #SIMILARES POR NOMBRE
+#SISTEMA DE RECOMENDACION
+@app.get("/recomendacion/{titulo}", response_model=RecommendationResponse)
 def recommend(titulo: str):
     titulo = titulo.lower()
     filtered_movies = movies_metadata[movies_metadata['title'].str.lower().str.contains(titulo.lower(), na=False)]
@@ -69,6 +67,7 @@ def recommend(titulo: str):
     recommended_movies = filtered_movies['title'].tolist()
     return {"recommendations": recommended_movies}
 
+#CANTIDAD DE FILMACIONES POR MES
 @app.get("/cantidad_filmaciones_mes/{mes}")
 def cantidad_filmaciones_mes(mes: str):
     meses = {"enero": 1, "febrero": 2, "marzo": 3, "abril": 4, "mayo": 5, "junio": 6,
@@ -80,6 +79,7 @@ def cantidad_filmaciones_mes(mes: str):
     count = movies_metadata[movies_metadata['release_date'].dt.month == mes_num].shape[0]
     return {"cantidad": count}
 
+#CANTIDAD DE FILMACIONES POR DIA
 @app.get("/cantidad_filmaciones_dia/{dia}")
 def cantidad_filmaciones_dia(dia: str):
     dias = {"lunes": 0, "martes": 1, "miércoles": 2, "jueves": 3, "viernes": 4, "sábado": 5, "domingo": 6}
@@ -90,6 +90,7 @@ def cantidad_filmaciones_dia(dia: str):
     count = movies_metadata[movies_metadata['release_date'].dt.weekday == dia_num].shape[0]
     return {"cantidad": count}
 
+#VER TITULOS
 @app.get("/score_titulo/{titulo}")
 def score_titulo(titulo: str):
     try:
@@ -103,9 +104,8 @@ def score_titulo(titulo: str):
         if movie.empty:
             return {"error": "Película no encontrada"}
         
-        # Convertir los valores a tipos estándar de Python
-        score = float(movie['popularity'].values[0])  # Convertir a float
-        year = int(movie['release_year'].values[0])   # Convertir a int
+        score = float(movie['popularity'].values[0])  
+        year = int(movie['release_year'].values[0])  
         
         return {"titulo": titulo, "año": year, "score": score}
     
@@ -114,6 +114,7 @@ def score_titulo(titulo: str):
     except Exception as e:
         return {"error": f"Ha ocurrido un error: {str(e)}"}
 
+#VER ACTOR
 @app.get("/get_actor/{nombre_actor}")
 def get_actor(nombre_actor: str):
     nombre_actor = nombre_actor.lower()
@@ -129,6 +130,7 @@ def get_actor(nombre_actor: str):
         return {"actor": nombre_actor, "cantidad_peliculas": actor_movies.shape[0], "retorno_total": total_ret, "promedio_retorno": promedio_ret}
     except Exception as e:
         return {"error": f"An error occurred: {str(e)}"}
+
 
 @app.get("/get_director/{nombre_director}", response_model=DirectorResponse)
 def get_director(nombre_director: str):
@@ -157,29 +159,32 @@ def get_director(nombre_director: str):
         ))
     return DirectorResponse(director=nombre_director, peliculas=peliculas, retorno_total=total_ret)
 
-
-@app.get("/popular_movies/{top_n}", response_model=PopularMoviesResponse) #VER LAS MAS POPULARES
+#TOP POPULARIDAD
+@app.get("/popular_movies/{top_n}", response_model=PopularMoviesResponse)
 def popular_movies(top_n: int):
     top_movies = movies_metadata[['title', 'popularity']].sort_values(by='popularity', ascending=False).head(top_n)
     return {"top_n": top_n, "peliculas": top_movies['title'].tolist()}
 
-@app.get("/movies_by_language/{idioma}", response_model=MoviesByLanguageResponse) #VER POR LENGUAJE
+#VER POR LENGUAJE
+@app.get("/movies_by_language/{idioma}", response_model=MoviesByLanguageResponse) 
 def movies_by_language(idioma: str):
     movies_by_language = movies_metadata[movies_metadata['original_language'].str.lower() == idioma.lower()]
     return {"idioma": idioma, "peliculas": movies_by_language['title'].tolist()}
 
-@app.get("/movies_by_review/{review}", response_model=MoviesByReviewResponse) #PELICULAS POR PALABRAS CLAVE EN REVIEW
+#PELICULAS POR PALABRAS CLAVE EN REVIEW
+@app.get("/movies_by_review/{review}", response_model=MoviesByReviewResponse) 
 def movies_by_review(review: str):
     movies_by_review = movies_metadata[movies_metadata['overview'].str.contains(review, case=False, na=False)]
     return {"review": review, "peliculas": movies_by_review['title'].tolist()}
 
-@app.get("/movies_by_genre/{genero}", response_model=MovieByGenreResponse) #PELICULAS POR GENERO
+#PELICULAS POR GENERO
+@app.get("/movies_by_genre/{genero}", response_model=MovieByGenreResponse)
 def movies_by_genre(genero: str):
     movies_by_genre = movies_metadata[movies_metadata['genres_list'].apply(lambda x: genero.lower() in [g.lower() for g in x])]
     return {"genero": genero, "peliculas": movies_by_genre['title'].tolist()}
 
-
-@app.get("/votos_titulo/{titulo}") #VALORACIONES
+#VALORACIONES
+@app.get("/votos_titulo/{titulo}") 
 def votos_titulo(titulo: str):
     try:
         movie = movies_metadata[movies_metadata['title'].str.lower() == titulo.lower()]
