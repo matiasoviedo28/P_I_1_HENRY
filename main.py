@@ -64,7 +64,7 @@ def recommend(titulo: str):
     filtered_movies = movies_metadata[movies_metadata['title'].str.lower().str.contains(titulo.lower(), na=False)]
     if filtered_movies.empty:
         return {"error": "Película no encontrada"}
-    recommended_movies = filtered_movies['title'].tolist()
+    recommended_movies = filtered_movies['title'].head(5).tolist()
     return {"recommendations": recommended_movies}
 
 #CANTIDAD DE FILMACIONES POR MES
