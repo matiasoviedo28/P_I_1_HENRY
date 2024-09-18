@@ -3,7 +3,7 @@
 
 ## Sistema de Recomendaciones de Películas 🎬
 ### Descripción del Proyecto
-    Este proyecto consiste en la creación de una API MVP para un sistema de recomendación de películas. En este README, se detalla el proceso completo, desde la obtención y preparación de los datos crudos hasta la implementación y consultas a la API desplegada en Render.
+Este proyecto consiste en la creación de una API MVP para un sistema de recomendación de películas. En este README, se detalla el proceso completo, desde la obtención y preparación de los datos crudos hasta la implementación y consultas a la API desplegada en Render.
 ___
 
 ### Estructura del Proyecto ⚙️
