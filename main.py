@@ -101,11 +101,11 @@ def cantidad_filmaciones_dia(dia: str):
 def score_titulo(titulo: str):
     '''Se introduce el nombre de una pelicula y retorna su año de estreno y su score'''
     try:
-        # Verificar si las columnas existen
+        #verificar
         if 'title' not in movies_metadata.columns or 'popularity' not in movies_metadata.columns or 'release_year' not in movies_metadata.columns:
             return {"error": "Datos faltantes en el dataset"}
         
-        # Filtrar la película
+        #filtrar
         movie = movies_metadata[movies_metadata['title'].str.lower() == titulo.lower()]
         
         if movie.empty:
@@ -173,7 +173,7 @@ def get_director(nombre_director: str):
     '''Se introduce un director y retorna sus peliculas con sus numeros'''
     nombre_director = nombre_director.lower()
 
-    # Filtrar el dataframe credits para encontrar directores
+    #filtrar
     director_credits = credits[credits['crew'].apply(
         lambda crew: any(
             crew_member['job'] == 'Director' and crew_member['name'].lower() == nombre_director
@@ -184,13 +184,13 @@ def get_director(nombre_director: str):
     if director_credits.empty:
         return {"Director": nombre_director, "Retorno Total": 0, "Películas": []}
 
-    # Obtener la lista de IDs de películas en las que el director ha trabajado
+    #obtener id
     movie_ids = director_credits['id'].tolist()
 
-    # Filtrar las películas del dataframe movies_metadata
+    #filtrar
     director_movies = movies_metadata[movies_metadata['id'].astype(str).isin(map(str, movie_ids))]
 
-    # Calcular el retorno total y obtener detalles de las películas
+    #calcular retorno total
     total_retorno = 0
     peliculas = []
 
