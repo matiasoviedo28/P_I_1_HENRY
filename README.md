@@ -121,3 +121,7 @@ uvicorn main:app --reload #por defecto se usa el puerto 8000
     http://127.0.0.1:8000/docs 
 [Link para local. ](http://127.0.0.1:8000/docs)
     Desde ahí puedes probar los diferentes endpoints en local
+
+___
+
+### Proyecto realizado por Matias Oviedo
